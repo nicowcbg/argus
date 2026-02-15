@@ -38,6 +38,7 @@ export function CreateProjectDialog({
 }: CreateProjectDialogProps) {
   const [files, setFiles] = useState<File[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const {
@@ -49,6 +50,12 @@ export function CreateProjectDialog({
     resolver: zodResolver(projectSchema),
   })
 
+  // Clear error when dialog opens/closes
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setError(null)
+    onOpenChange(next)
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files))
@@ -56,48 +63,55 @@ export function CreateProjectDialog({
   }
 
   const onSubmit = async (data: ProjectFormValues) => {
+    setError(null)
     setIsLoading(true)
     try {
-      const formData = new FormData()
-      formData.append("title", data.title)
-      if (data.description) {
-        formData.append("description", data.description)
-      }
-      files.forEach((file) => {
-        formData.append("files", file)
-      })
-
-      const response = await axios.post("/api/projects", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await axios.post<{ id?: number }>(
+        "/api/issues",
+        {
+          title: data.title.trim(),
+          description: data.description?.trim() || null,
         },
-      })
+        { headers: { "Content-Type": "application/json" } }
+      )
 
-      if (response.data) {
+      const id = response.data?.id
+      if (id !== undefined && id !== null) {
         reset()
         setFiles([])
         onOpenChange(false)
         router.refresh()
+      } else {
+        setError("Failed to create issue. Please try again.")
       }
-    } catch (error) {
-      console.error("Error creating project:", error)
+    } catch (err) {
+      const message =
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? String(err.response.data.error)
+          : "Failed to create issue. Please try again."
+      setError(message)
+      console.error("Error creating issue:", err)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
           <DialogDescription>
-            Create a new project to get started. You can add files and details
-            later.
+            Create a new issue. Only the title is required.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 py-4">
+            {error && (
+              <p className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                {error}
+              </p>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="title">Title *</Label>
               <Input
@@ -146,7 +160,7 @@ export function CreateProjectDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isLoading}
             >
               Cancel

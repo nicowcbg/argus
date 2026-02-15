@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
+import { getCurrentUser } from "@/lib/supabase/auth-server"
 import { prisma } from "@/lib/prisma"
 import { uploadToS3 } from "@/lib/s3"
 
 export async function GET() {
   try {
-    const session = await auth()
+    const user = await getCurrentUser()
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const projects = await prisma.project.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
       },
       include: {
         files: true,
@@ -35,9 +35,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const user = await getCurrentUser()
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description: description || null,
-        userId: session.user.id,
+        userId: user.id,
       },
     })
 

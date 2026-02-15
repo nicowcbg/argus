@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CreateProjectDialog } from "./create-project-dialog"
@@ -8,33 +8,32 @@ import { Plus, FileText, Calendar } from "lucide-react"
 import { format } from "date-fns"
 import Link from "next/link"
 
-interface Project {
-  id: string
-  title: string
+export interface DashboardIssue {
+  id: number
+  title: string | null
   description: string | null
-  createdAt: Date
-  updatedAt: Date
-  files: {
-    id: string
-    name: string
-  }[]
+  createdAt: string
 }
 
 interface DashboardContentProps {
-  projects: Project[]
+  issues: DashboardIssue[]
 }
 
-export function DashboardContent({ projects: initialProjects }: DashboardContentProps) {
-  const [projects, setProjects] = useState(initialProjects)
+export function DashboardContent({ issues: initialIssues }: DashboardContentProps) {
+  const [issues, setIssues] = useState(initialIssues)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  useEffect(() => {
+    setIssues(initialIssues)
+  }, [initialIssues])
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
+          <h1 className="text-3xl font-bold">Issues</h1>
           <p className="text-muted-foreground mt-1">
-            Manage and organize your projects
+            Issues created by you
           </p>
         </div>
         <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
@@ -43,13 +42,13 @@ export function DashboardContent({ projects: initialProjects }: DashboardContent
         </Button>
       </div>
 
-      {projects.length === 0 ? (
+      {issues.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No issues yet</h3>
             <p className="text-muted-foreground mb-4 text-center">
-              Get started by creating your first project
+              Get started by creating your first issue
             </p>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -59,14 +58,14 @@ export function DashboardContent({ projects: initialProjects }: DashboardContent
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link key={project.id} href={`/dashboard/projects/${project.id}`}>
+          {issues.map((issue) => (
+            <Link key={issue.id} href={`/dashboard/issues/${issue.id}`}>
               <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader>
-                  <CardTitle className="line-clamp-1">{project.title}</CardTitle>
-                  {project.description && (
+                  <CardTitle className="line-clamp-1">{issue.title ?? "Untitled"}</CardTitle>
+                  {issue.description && (
                     <CardDescription className="line-clamp-2">
-                      {project.description}
+                      {issue.description}
                     </CardDescription>
                   )}
                 </CardHeader>
@@ -74,14 +73,8 @@ export function DashboardContent({ projects: initialProjects }: DashboardContent
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(project.createdAt), "MMM d, yyyy")}</span>
+                      <span>{format(new Date(issue.createdAt), "MMM d, yyyy")}</span>
                     </div>
-                    {project.files.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
-                        <span>{project.files.length}</span>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { signOut } from "next-auth/react"
+import { usePathname, useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, User, LogOut } from "lucide-react"
 import Image from "next/image"
@@ -17,6 +17,14 @@ interface SidebarProps {
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/")
+    router.refresh()
+  }
 
   return (
     <div className="flex flex-col h-screen w-64 border-r bg-card">
@@ -63,7 +71,7 @@ export function Sidebar({ user }: SidebarProps) {
         <Button
           variant="ghost"
           className="w-full justify-start"
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out

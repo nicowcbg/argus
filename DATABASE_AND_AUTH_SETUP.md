@@ -14,7 +14,15 @@ npm install
 
 ## 2. Set up PostgreSQL
 
-**Option A — Docker (simplest)**
+**Option A — Supabase (recommended, free hosted)**
+
+Use Supabase as your database. See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** for the full guide. Short version:
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. **Settings** → **Database** → copy the **URI** connection string (use **Direct** for simplicity).
+3. In `.env.local` set `DATABASE_URL` to that URI (replace `[YOUR-PASSWORD]` with your DB password).
+
+**Option B — Docker (local)**
 
 ```bash
 docker run --name postgres-argus \
@@ -27,7 +35,7 @@ docker run --name postgres-argus \
 Your connection URL will be:
 `postgresql://postgres:password@localhost:5432/argus?schema=public`
 
-**Option B — Local PostgreSQL**
+**Option C — Local PostgreSQL**
 
 - Install PostgreSQL (see [POSTGRESQL_SETUP.md](./POSTGRESQL_SETUP.md)).
 - Create a database, e.g. `argus` or `argus_dev`.
@@ -40,13 +48,15 @@ Your connection URL will be:
 Create or edit `.env.local` in the project root with at least:
 
 ```env
-# Required for database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/argus?schema=public"
+# Required for database (Supabase URI or local Postgres)
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[project-ref].supabase.co:5432/postgres?schema=public"
 
 # Required for auth
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="REPLACE_WITH_SECRET"
 ```
+
+If using **Supabase**, get `DATABASE_URL` from the Supabase dashboard → **Settings** → **Database** → **Connection string** → **URI** (Direct). Replace `[YOUR-PASSWORD]` with your database password.
 
 **Generate `NEXTAUTH_SECRET`:**
 
@@ -66,9 +76,12 @@ From the project root:
 # Generate Prisma Client
 npx prisma generate
 
-# Create tables in the database (no migrations yet)
-npx prisma db push
+# Create tables (loads DATABASE_URL from .env.local)
+npm run db:push
 ```
+
+**Note:** Prisma CLI only reads `.env` by default. This project uses `dotenv-cli` so `npm run db:push` loads `.env.local`. If you run `npx prisma db push` directly, either put `DATABASE_URL` in a `.env` file or run:
+`DATABASE_URL="your-connection-string" npx prisma db push`
 
 If `db push` fails, check:
 
