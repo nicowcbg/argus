@@ -59,7 +59,7 @@ export function DashboardContent({ issues: initialIssues }: DashboardContentProp
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {issues.map((issue) => (
-            <Link key={issue.id} href={`/dashboard/issues/${issue.id}`}>
+            <Link key={issue.id} href={`/issues/${issue.id}`}>
               <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader>
                   <CardTitle className="line-clamp-1">{issue.title ?? "Untitled"}</CardTitle>
