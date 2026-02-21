@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 import { getSupabaseUserId } from "@/lib/supabase/auth-server"
 
+export const dynamic = "force-dynamic"
+
 const THREADS_CONSTRAINTS = [
   {
-    key: "user",
+    key: "User",
     constraint_type: "equals",
-    value: "1763415437515x804064386191329700",
+    value: "1763415437515x804064386191329700"
   },
 ]
 
