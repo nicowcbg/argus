@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Mail, Loader2 } from "lucide-react"
+import { Mail } from "lucide-react"
 import { format } from "date-fns"
 import type { ThreadItem } from "@/app/api/threads/route"
 
@@ -50,10 +50,38 @@ export function EmailsTab() {
   if (loading) {
     return (
       <Card className="overflow-hidden">
-        <CardContent className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground mb-4" />
-          <p className="text-sm text-muted-foreground">Loading threads…</p>
-        </CardContent>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-[140px]">
+                  Last contact
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-[180px]">
+                  Subject
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Summary
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="px-4 py-3">
+                    <div className="h-4 w-24 rounded bg-muted animate-pulse" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 max-w-[200px] rounded bg-muted animate-pulse" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-4 max-w-[320px] rounded bg-muted animate-pulse" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     )
   }
@@ -109,8 +137,7 @@ export function EmailsTab() {
               >
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                   {(() => {
-                    const raw =
-                      t["Modified Date"] ?? t.date ?? (t as { last_contact?: string }).last_contact
+                    const raw = t.last_contact ?? t["Modified Date"] ?? t.date
                     if (!raw) return "—"
                     try {
                       const d = new Date(raw)

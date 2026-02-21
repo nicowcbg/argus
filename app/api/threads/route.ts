@@ -18,6 +18,7 @@ export type ThreadItem = {
   summary?: string
   status?: string
   label?: string
+  last_contact?: string
   "Modified Date"?: string
   "Created Date"?: string
   date?: string
