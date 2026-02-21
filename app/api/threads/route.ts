@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseUserId } from "@/lib/supabase/auth-server"
 
 export const dynamic = "force-dynamic"
@@ -29,11 +29,9 @@ export type ThreadItem = {
   [key: string]: unknown
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await getSupabaseUserId()
-    // Optional: uncomment to require auth for threads
-    // if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const token = process.env.THELOBBY_API_KEY ?? process.env.LOBBY_BEARER_TOKEN
     if (!token) {
@@ -47,12 +45,25 @@ export async function GET() {
       )
     }
 
+    const { searchParams } = new URL(request.url)
+    const cursor = searchParams.get("cursor") ?? "0"
+    const limit = searchParams.get("limit") ?? "50"
+    const sort_field = searchParams.get("sort_field") ?? "last_contact"
+    const descending = searchParams.get("descending") ?? "true"
+
     const version = (process.env.THELOBBY_VERSION ?? "version-test/").replace(
       /\/?$/,
       "/"
     )
     const constraints = encodeURIComponent(JSON.stringify(THREADS_CONSTRAINTS))
-    const url = `https://thelobby.ai/version-test/api/1.1/obj/thread?constraints=${constraints}`
+    const params = new URLSearchParams({
+      constraints,
+      cursor,
+      limit,
+      sort_field,
+      descending,
+    })
+    const url = `https://thelobby.ai/${version}api/1.1/obj/thread?${params}`
 
     const res = await fetch(url, {
       method: "GET",
@@ -73,10 +84,20 @@ export async function GET() {
     }
 
     const data = await res.json()
+    const response = data?.response
     const list =
-      data?.response?.results ??
+      response?.results ??
       (Array.isArray(data) ? data : data?.results ?? [])
-    return NextResponse.json(list as ThreadItem[])
+    const count = response?.count ?? list.length
+    const remaining = response?.remaining ?? 0
+    const nextCursor = Number(cursor) + list.length
+
+    return NextResponse.json({
+      results: list as ThreadItem[],
+      cursor: nextCursor,
+      count,
+      remaining,
+    })
   } catch (error) {
     console.error("Threads API error:", error)
     const message = error instanceof Error ? error.message : "Failed to fetch threads"

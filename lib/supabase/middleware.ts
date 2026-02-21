@@ -34,11 +34,11 @@ export async function updateSession(request: NextRequest) {
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
     const url = request.nextUrl.clone()
     if (pathname === "/dashboard") {
-      url.pathname = "/home"
+      url.pathname = "/app"
     } else if (pathname.startsWith("/dashboard/issues/")) {
       url.pathname = pathname.replace("/dashboard/issues", "/issues")
     } else {
-      url.pathname = "/home"
+      url.pathname = "/app"
     }
     return NextResponse.redirect(url)
   }
@@ -57,7 +57,7 @@ export async function updateSession(request: NextRequest) {
 
     if (user && (pathname === "/login" || pathname === "/signup")) {
       const url = request.nextUrl.clone()
-      url.pathname = "/home"
+      url.pathname = "/app"
       return NextResponse.redirect(url)
     }
   } catch (err) {
