@@ -17,9 +17,10 @@ export interface DashboardIssue {
 
 interface DashboardContentProps {
   issues: DashboardIssue[]
+  noPadding?: boolean
 }
 
-export function DashboardContent({ issues: initialIssues }: DashboardContentProps) {
+export function DashboardContent({ issues: initialIssues, noPadding }: DashboardContentProps) {
   const [issues, setIssues] = useState(initialIssues)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -28,7 +29,7 @@ export function DashboardContent({ issues: initialIssues }: DashboardContentProp
   }, [initialIssues])
 
   return (
-    <div className="p-8">
+    <div className={noPadding ? undefined : "p-8"}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Issues</h1>
