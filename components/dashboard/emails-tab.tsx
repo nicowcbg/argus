@@ -22,9 +22,16 @@ export function EmailsTab() {
     setLoading(true)
     setError(null)
     fetch("/api/threads")
-      .then((res) => {
-        if (!res.ok) throw new Error(res.status === 500 ? "Server error" : "Failed to load")
-        return res.json()
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          const msg =
+            typeof data?.error === "string"
+              ? data.error
+              : data?.hint ?? (res.status === 500 ? "Server error" : "Failed to load")
+          throw new Error(msg)
+        }
+        return data
       })
       .then((data) => {
         if (!cancelled) setThreads(Array.isArray(data) ? data : [])

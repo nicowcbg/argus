@@ -31,8 +31,12 @@ export async function GET() {
     const token = process.env.THELOBBY_API_KEY ?? process.env.LOBBY_BEARER_TOKEN
     if (!token) {
       return NextResponse.json(
-        { error: "THELOBBY_API_KEY or LOBBY_BEARER_TOKEN not configured" },
-        { status: 500 }
+        {
+          error: "Lobby API key not configured",
+          code: "MISSING_API_KEY",
+          hint: "Set THELOBBY_API_KEY or LOBBY_BEARER_TOKEN in .env.local",
+        },
+        { status: 503 }
       )
     }
 
@@ -41,7 +45,7 @@ export async function GET() {
       "/"
     )
     const constraints = encodeURIComponent(JSON.stringify(THREADS_CONSTRAINTS))
-    const url = `https://thelobby.ai/${version}api/1.1/obj/thread?constraints=${constraints}`
+    const url = `https://thelobby.ai/version-test/api/1.1/obj/thread?constraints=${constraints}`
 
     const res = await fetch(url, {
       method: "GET",
@@ -66,8 +70,9 @@ export async function GET() {
     return NextResponse.json(list as ThreadItem[])
   } catch (error) {
     console.error("Threads API error:", error)
+    const message = error instanceof Error ? error.message : "Failed to fetch threads"
     return NextResponse.json(
-      { error: "Failed to fetch threads" },
+      { error: "Failed to fetch threads", details: message },
       { status: 500 }
     )
   }
