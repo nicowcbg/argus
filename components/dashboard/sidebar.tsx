@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, User, LogOut, MessageSquarePlus } from "lucide-react"
+import { LayoutDashboard, User, LogOut, MessageSquarePlus, Mail } from "lucide-react"
 import Image from "next/image"
 
 interface SidebarProps {
@@ -52,6 +52,15 @@ export function Sidebar({ user, chats = [] }: SidebarProps) {
           >
             <MessageSquarePlus className="mr-2 h-4 w-4" />
             New chat
+          </Button>
+        </Link>
+        <Link href="/emails">
+          <Button
+            variant={pathname === "/emails" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Emails
           </Button>
         </Link>
 

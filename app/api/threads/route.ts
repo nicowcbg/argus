@@ -8,20 +8,24 @@ const THREADS_CONSTRAINTS = [
     key: "User",
     constraint_type: "equals",
     value: "1763415437515x804064386191329700"
-  },
+  }
 ]
 
+/** Shape of one thread from Lobby API (response.response.results[]) */
 export type ThreadItem = {
-  Date: string
-  subject: string
-  status: string
-  summary: string
-  label: string
   _id: string
-  Important: string
-  Urgent: string
-  pre_tag: string
-  last_contact: string
+  subject?: string
+  summary?: string
+  status?: string
+  label?: string
+  "Modified Date"?: string
+  "Created Date"?: string
+  date?: string
+  Important?: boolean
+  Urgent?: boolean
+  pre_tag?: string
+  user?: string
+  [key: string]: unknown
 }
 
 export async function GET() {
@@ -68,7 +72,9 @@ export async function GET() {
     }
 
     const data = await res.json()
-    const list = Array.isArray(data) ? data : data?.response ?? data?.results ?? []
+    const list =
+      data?.response?.results ??
+      (Array.isArray(data) ? data : data?.results ?? [])
     return NextResponse.json(list as ThreadItem[])
   } catch (error) {
     console.error("Threads API error:", error)

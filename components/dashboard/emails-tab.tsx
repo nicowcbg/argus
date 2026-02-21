@@ -108,18 +108,17 @@ export function EmailsTab() {
                 className="border-b last:border-0 hover:bg-muted/30 transition-colors"
               >
                 <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {t.last_contact
-                    ? (() => {
-                        try {
-                          const d = new Date(t.last_contact)
-                          return isNaN(d.getTime())
-                            ? t.last_contact
-                            : format(d, "MMM d, yyyy")
-                        } catch {
-                          return t.last_contact
-                        }
-                      })()
-                    : "—"}
+                  {(() => {
+                    const raw =
+                      t["Modified Date"] ?? t.date ?? (t as { last_contact?: string }).last_contact
+                    if (!raw) return "—"
+                    try {
+                      const d = new Date(raw)
+                      return isNaN(d.getTime()) ? raw : format(d, "MMM d, yyyy")
+                    } catch {
+                      return raw
+                    }
+                  })()}
                 </td>
                 <td className="px-4 py-3 text-sm font-medium truncate max-w-[280px]" title={t.subject}>
                   {t.subject ?? "—"}

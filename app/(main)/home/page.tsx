@@ -1,6 +1,6 @@
 import { getSupabaseUserId } from "@/lib/supabase/auth-server"
 import { getIssuesForUser } from "@/lib/supabase/issues-server"
-import { DashboardWithTabs } from "@/components/dashboard/dashboard-with-tabs"
+import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import type { DashboardIssue } from "@/components/dashboard/dashboard-content"
 
 export default async function HomePage() {
@@ -20,5 +20,5 @@ export default async function HomePage() {
     }
   }
 
-  return <DashboardWithTabs issues={issues} />
+  return <DashboardContent issues={issues} />
 }
