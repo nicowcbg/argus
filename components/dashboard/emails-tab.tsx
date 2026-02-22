@@ -7,6 +7,7 @@ import { Mail, ChevronDown } from "lucide-react"
 import { format } from "date-fns"
 import type { ThreadItem } from "@/app/api/threads/route"
 import { getThreadsCache, setThreadsCache } from "@/lib/threads-cache"
+import type { ThreadsPayload } from "@/lib/threads-server"
 
 function truncateOneLine(s: string, maxLen = 120): string {
   const t = s?.trim() ?? ""
@@ -48,7 +49,8 @@ async function fetchThreads(cursor?: number): Promise<ThreadsPayload> {
       typeof data?.error === "string"
         ? data.error
         : data?.hint ?? (res.status === 500 ? "Server error" : "Failed to load")
-    throw new Error(msg)
+    const details = typeof data?.details === "string" ? data.details : undefined
+    throw new Error(details ? `${msg}: ${details}` : msg)
   }
   return {
     results: Array.isArray(data.results) ? data.results : [],
@@ -58,11 +60,24 @@ async function fetchThreads(cursor?: number): Promise<ThreadsPayload> {
   }
 }
 
-export function EmailsTab() {
-  const [threads, setThreads] = useState<ThreadItem[]>([])
-  const [cursor, setCursor] = useState<number>(0)
-  const [remaining, setRemaining] = useState<number>(0)
-  const [loading, setLoading] = useState(true)
+export function EmailsTab({
+  initialThreads,
+}: {
+  initialThreads?: ThreadsPayload | null
+} = {}) {
+  const hasInitial =
+    initialThreads?.results && initialThreads.results.length > 0
+  const [threads, setThreads] = useState<ThreadItem[]>(() => {
+    if (hasInitial) {
+      return [...initialThreads!.results].sort(sortByDateDesc)
+    }
+    return []
+  })
+  const [cursor, setCursor] = useState<number>(() => initialThreads?.cursor ?? 0)
+  const [remaining, setRemaining] = useState<number>(
+    () => initialThreads?.remaining ?? 0
+  )
+  const [loading, setLoading] = useState(!hasInitial)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -74,6 +89,28 @@ export function EmailsTab() {
 
   useEffect(() => {
     let cancelled = false
+    if (hasInitial) {
+      setLoading(false)
+      loadPage()
+        .then((payload) => {
+          if (cancelled) return
+          setThreads(payload.results)
+          setCursor(payload.cursor)
+          setRemaining(payload.remaining)
+          setThreadsCache({
+            results: payload.results,
+            cursor: payload.cursor,
+            count: payload.count,
+            remaining: payload.remaining,
+          })
+        })
+        .catch(() => {
+          /* keep showing initial data on background refresh failure */
+        })
+      return () => {
+        cancelled = true
+      }
+    }
     const cached = getThreadsCache()
     if (cached?.results?.length) {
       const sorted = [...(cached.results as ThreadItem[])].sort(sortByDateDesc)
@@ -104,7 +141,7 @@ export function EmailsTab() {
     return () => {
       cancelled = true
     }
-  }, [loadPage])
+  }, [loadPage, hasInitial])
 
   const loadMore = () => {
     if (remaining <= 0 || loadingMore) return

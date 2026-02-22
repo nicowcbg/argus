@@ -5,10 +5,10 @@ export const dynamic = "force-dynamic"
 
 const THREADS_CONSTRAINTS = [
   {
-    key: "User",
+    key: "user",
     constraint_type: "equals",
-    value: "1763415437515x804064386191329700"
-  }
+    value: "1763415437515x804064386191329700",
+  },
 ]
 
 /** Shape of one thread from Lobby API (response.response.results[]) */
@@ -77,8 +77,14 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       const text = await res.text()
       console.error("Lobby API error:", res.status, text)
+      const message =
+        res.status === 401
+          ? "Lobby API: invalid or expired token"
+          : res.status === 403
+            ? "Lobby API: access denied"
+            : `Lobby API error (${res.status})`
       return NextResponse.json(
-        { error: "Failed to fetch threads", details: text },
+        { error: message, details: text.slice(0, 200) },
         { status: res.status }
       )
     }
@@ -100,9 +106,10 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("Threads API error:", error)
-    const message = error instanceof Error ? error.message : "Failed to fetch threads"
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch threads"
     return NextResponse.json(
-      { error: "Failed to fetch threads", details: message },
+      { error: message, details: message },
       { status: 500 }
     )
   }

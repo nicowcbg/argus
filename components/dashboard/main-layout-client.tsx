@@ -5,7 +5,9 @@ import { useMemo, useState, useEffect } from "react"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
 import { EmailsTab } from "@/components/dashboard/emails-tab"
+import { setThreadsCache } from "@/lib/threads-cache"
 import type { DashboardIssue } from "@/components/dashboard/dashboard-content"
+import type { ThreadsPayload } from "@/lib/threads-server"
 
 type AppTab = "home" | "emails"
 
@@ -17,6 +19,7 @@ interface MainLayoutClientProps {
   }
   chats: { id: string; title: string | null; updated_at: string }[]
   issues: DashboardIssue[]
+  initialThreads: ThreadsPayload | null
   children: React.ReactNode
 }
 
@@ -24,8 +27,19 @@ export function MainLayoutClient({
   user,
   chats,
   issues,
+  initialThreads,
   children,
 }: MainLayoutClientProps) {
+  useEffect(() => {
+    if (initialThreads?.results?.length) {
+      setThreadsCache({
+        results: initialThreads.results,
+        cursor: initialThreads.cursor,
+        count: initialThreads.count,
+        remaining: initialThreads.remaining,
+      })
+    }
+  }, [initialThreads])
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isApp = pathname === "/app"
@@ -63,7 +77,7 @@ export function MainLayoutClient({
             <h1 className="text-3xl font-bold tracking-tight">Emails</h1>
             <p className="text-muted-foreground mt-1">Your email threads</p>
           </div>
-          <EmailsTab />
+          <EmailsTab initialThreads={initialThreads} />
         </div>
       )
     ) : (
