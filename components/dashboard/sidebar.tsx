@@ -1,32 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { LayoutDashboard, User, LogOut, MessageSquarePlus, Mail } from "lucide-react"
 import Image from "next/image"
-import { getThreadsCache, setThreadsCache } from "@/lib/threads-cache"
-
-function prefetchThreads() {
-  if (getThreadsCache()) return
-  fetch("/api/threads?sort_field=last_contact&descending=true")
-    .then((r) => r.json())
-    .then((data) => {
-      if (data?.results && Array.isArray(data.results)) {
-        setThreadsCache({
-          results: data.results,
-          cursor: data.cursor ?? data.results.length,
-          count: data.count ?? data.results.length,
-          remaining: data.remaining ?? 0,
-        })
-      }
-    })
-    .catch(() => {})
-}
-
-type AppTab = "home" | "emails"
 
 interface SidebarProps {
   user: {
@@ -35,22 +14,11 @@ interface SidebarProps {
     image?: string | null
   }
   chats?: { id: string; title: string | null; updated_at: string }[]
-  isApp?: boolean
-  appTab?: AppTab
-  onAppTabChange?: (tab: AppTab) => void
 }
 
-export function Sidebar({ user, chats = [], isApp, appTab, onAppTabChange }: SidebarProps) {
+export function Sidebar({ user, chats = [] }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-
-  const homeActive = isApp ? appTab === "home" : pathname === "/home" || pathname === "/app"
-  const emailsActive = isApp ? appTab === "emails" : pathname === "/emails"
-
-  useEffect(() => {
-    const t = setTimeout(prefetchThreads, 300)
-    return () => clearTimeout(t)
-  }, [])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -62,74 +30,39 @@ export function Sidebar({ user, chats = [], isApp, appTab, onAppTabChange }: Sid
   return (
     <div className="flex flex-col h-screen w-64 border-r bg-card">
       <div className="p-6 border-b">
-        <Link href="/app" className="text-2xl font-bold">
+        <Link href="/home" className="text-2xl font-bold">
           Argus
         </Link>
       </div>
 
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {isApp && onAppTabChange ? (
-          <>
-            <Button
-              variant={homeActive ? "secondary" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => onAppTabChange("home")}
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Home
-            </Button>
-            <Link href="/new">
-              <Button
-                variant={pathname === "/new" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <MessageSquarePlus className="mr-2 h-4 w-4" />
-                New chat
-              </Button>
-            </Link>
-            <Button
-              variant={emailsActive ? "secondary" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => {
-                prefetchThreads()
-                onAppTabChange("emails")
-              }}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Emails
-            </Button>
-          </>
-        ) : (
-          <>
-            <Link href="/app">
-              <Button
-                variant={homeActive ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Home
-              </Button>
-            </Link>
-            <Link href="/new">
-              <Button
-                variant={pathname === "/new" ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <MessageSquarePlus className="mr-2 h-4 w-4" />
-                New chat
-              </Button>
-            </Link>
-            <Link href="/app?tab=emails" onMouseEnter={prefetchThreads}>
-              <Button
-                variant={emailsActive ? "secondary" : "ghost"}
-                className="w-full justify-start"
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Emails
-              </Button>
-            </Link>
-          </>
-        )}
+        <Link href="/home">
+          <Button
+            variant={pathname === "/home" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            Home
+          </Button>
+        </Link>
+        <Link href="/new">
+          <Button
+            variant={pathname === "/new" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <MessageSquarePlus className="mr-2 h-4 w-4" />
+            New chat
+          </Button>
+        </Link>
+        <Link href="/emails">
+          <Button
+            variant={pathname === "/emails" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Emails
+          </Button>
+        </Link>
 
         {chats.length > 0 && (
           <div className="pt-4 space-y-1">

@@ -9,7 +9,7 @@ export default async function NewChatPage() {
   const { id, error } = await createChat(userId, "New chat")
   if (error || !id) {
     console.error("createChat error:", error)
-    redirect("/app")
+    redirect("/home")
   }
 
   redirect(`/chat/${id}`)

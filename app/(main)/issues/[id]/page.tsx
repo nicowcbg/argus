@@ -25,7 +25,7 @@ export default async function IssuePage({
   return (
     <div className="p-8 max-w-2xl">
       <Button variant="ghost" asChild className="mb-4 gap-2">
-        <Link href="/app">
+        <Link href="/home">
           <ArrowLeft className="h-4 w-4" />
           Back to issues
         </Link>

@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getSupabaseUserId } from "@/lib/supabase/auth-server"
 
 export const dynamic = "force-dynamic"
 
 const THREADS_CONSTRAINTS = [
   {
-    key: "user",
+    key: "User",
     constraint_type: "equals",
-    value: "1763415437515x804064386191329700",
-  },
+    value: "1763415437515x804064386191329700"
+  }
 ]
 
 /** Shape of one thread from Lobby API (response.response.results[]) */
@@ -29,9 +29,11 @@ export type ThreadItem = {
   [key: string]: unknown
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await getSupabaseUserId()
+    // Optional: uncomment to require auth for threads
+    // if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const token = process.env.THELOBBY_API_KEY ?? process.env.LOBBY_BEARER_TOKEN
     if (!token) {
@@ -45,25 +47,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { searchParams } = new URL(request.url)
-    const cursor = searchParams.get("cursor") ?? "0"
-    const limit = searchParams.get("limit") ?? "50"
-    const sort_field = searchParams.get("sort_field") ?? "last_contact"
-    const descending = searchParams.get("descending") ?? "true"
-
     const version = (process.env.THELOBBY_VERSION ?? "version-test/").replace(
       /\/?$/,
       "/"
     )
     const constraints = encodeURIComponent(JSON.stringify(THREADS_CONSTRAINTS))
-    const params = new URLSearchParams({
-      constraints,
-      cursor,
-      limit,
-      sort_field,
-      descending,
-    })
-    const url = `https://thelobby.ai/${version}api/1.1/obj/thread?${params}`
+    const url = `https://thelobby.ai/version-test/api/1.1/obj/thread?constraints=${constraints}`
 
     const res = await fetch(url, {
       method: "GET",
@@ -77,39 +66,22 @@ export async function GET(request: NextRequest) {
     if (!res.ok) {
       const text = await res.text()
       console.error("Lobby API error:", res.status, text)
-      const message =
-        res.status === 401
-          ? "Lobby API: invalid or expired token"
-          : res.status === 403
-            ? "Lobby API: access denied"
-            : `Lobby API error (${res.status})`
       return NextResponse.json(
-        { error: message, details: text.slice(0, 200) },
+        { error: "Failed to fetch threads", details: text },
         { status: res.status }
       )
     }
 
     const data = await res.json()
-    const response = data?.response
     const list =
-      response?.results ??
+      data?.response?.results ??
       (Array.isArray(data) ? data : data?.results ?? [])
-    const count = response?.count ?? list.length
-    const remaining = response?.remaining ?? 0
-    const nextCursor = Number(cursor) + list.length
-
-    return NextResponse.json({
-      results: list as ThreadItem[],
-      cursor: nextCursor,
-      count,
-      remaining,
-    })
+    return NextResponse.json(list as ThreadItem[])
   } catch (error) {
     console.error("Threads API error:", error)
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch threads"
+    const message = error instanceof Error ? error.message : "Failed to fetch threads"
     return NextResponse.json(
-      { error: message, details: message },
+      { error: "Failed to fetch threads", details: message },
       { status: 500 }
     )
   }
