@@ -109,6 +109,7 @@ export function Sidebar({ user, chats = [], isApp, appTab, onAppTabChange }: Sid
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 Home
               </Button>
+            </Link>
             <Link href="/new">
               <Button
                 variant={pathname === "/new" ? "secondary" : "ghost"}
